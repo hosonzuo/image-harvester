@@ -4,7 +4,7 @@ on:
     inputs:
       total:
         description: number of shards
-        default: "6"
+        default: "2"
       list_key:
         description: worklist key in R2 (med_todo/shibu/full)
         default: "_worklist/med_todo.csv"
@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 2
       matrix:
-        shard: [0,1,2,3,4,5]
+        shard: [0,1]
     timeout-minutes: 340
     steps:
       - uses: actions/checkout@v4
