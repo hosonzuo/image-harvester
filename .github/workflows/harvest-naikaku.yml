@@ -8,6 +8,9 @@ on:
       list_key:
         description: worklist key in R2 (med_todo/shibu/full)
         default: "_worklist/med_todo.csv"
+      edge_proxy:
+        description: egress proxy (502 换IP用)
+        default: "https://naikaku-dl.hosonzuo.workers.dev/fetch?url="
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
       - name: run shard
         env:
           P: ${{ secrets.P }}
-          EDGE_PROXY: https://naikaku-dl.hosonzuo.workers.dev/fetch?url=
+          EDGE_PROXY: ${{ github.event.inputs.edge_proxy }}
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_KEY: ${{ secrets.R2_KEY }}
           R2_SECRET: ${{ secrets.R2_SECRET }}
