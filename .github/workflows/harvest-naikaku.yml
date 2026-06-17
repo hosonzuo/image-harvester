@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 16
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     timeout-minutes: 340
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
         env:
           P: ${{ secrets.P }}
           EDGE_PROXY: ${{ github.event.inputs.edge_proxy }}
-          NAIKAKU_ZIP: https://naikaku-zip.hosonzuo.workers.dev,https://naikaku-mine.hosonzuo.workers.dev,https://naikaku-zip-2.hosonzuo.workers.dev,https://naikaku-zip-3.hosonzuo.workers.dev
+          NAIKAKU_ZIP: https://naikaku-zip.hosonzuo.workers.dev,https://naikaku-mine.hosonzuo.workers.dev,https://naikaku-zip-2.hosonzuo.workers.dev,https://naikaku-zip-3.hosonzuo.workers.dev,https://naikaku-zip-4.hosonzuo.workers.dev,https://naikaku-zip-5.hosonzuo.workers.dev,https://naikaku-zip-6.hosonzuo.workers.dev,https://naikaku-zip-7.hosonzuo.workers.dev
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_KEY: ${{ secrets.R2_KEY }}
           R2_SECRET: ${{ secrets.R2_SECRET }}
