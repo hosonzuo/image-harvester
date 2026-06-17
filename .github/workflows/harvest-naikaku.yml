@@ -34,7 +34,6 @@ jobs:
         env:
           P: ${{ secrets.P }}
           EDGE_PROXY: ${{ github.event.inputs.edge_proxy }}
-          NAIKAKU_ZIP: https://naikaku-zip.hosonzuo.workers.dev
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_KEY: ${{ secrets.R2_KEY }}
           R2_SECRET: ${{ secrets.R2_SECRET }}
