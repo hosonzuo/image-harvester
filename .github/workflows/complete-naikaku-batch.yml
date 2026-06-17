@@ -30,8 +30,8 @@ jobs:
         run: git clone --depth 1 --quiet https://x-access-token:${P}@github.com/hosonzuo8848/harvester-priv.git _p
       - name: batch gap-fill (targeted enum + download, sequential)
         env:
-          EDGE_PROXY: https://naikaku-dl.hosonzuo.workers.dev/fetch?url=
-          NAIKAKU_ZIP: https://naikaku-zip.hosonzuo.workers.dev
+          EDGE_PROXY: https://naikaku-mine.hosonzuo.workers.dev/fetch?url=
+          NAIKAKU_ZIP: https://naikaku-mine.hosonzuo.workers.dev
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_KEY: ${{ secrets.R2_KEY }}
           R2_SECRET: ${{ secrets.R2_SECRET }}
