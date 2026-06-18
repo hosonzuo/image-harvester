@@ -11,6 +11,9 @@ on:
       edge_proxy:
         description: egress proxy (502 换IP用)
         default: "https://naikaku-dl.hosonzuo.workers.dev/fetch?url="
+      force:
+        description: "1=缺页整本重下覆盖(补残·跳过skip)"
+        default: ""
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -46,4 +49,5 @@ jobs:
           DST_BUCKET: guyaofang-lib
           DST_GUJI_BUCKET: guji-sea
           PAGE_WORKERS: "10"
+          FORCE: ${{ github.event.inputs.force }}
         run: python stub.py --source naikaku --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total }}
