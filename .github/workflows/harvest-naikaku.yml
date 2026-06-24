@@ -1,7 +1,7 @@
 name: harvest-naikaku
 on:
   schedule:
-    - cron: '0 */6 * * *'   # 2026-06-25 加cron治停摆·6h温和自动投料(execution-watchdog:真活必加cron)
+    - cron: '0 */6 * * *'   # auto-feed every 6h (fix stall; execution-watchdog: live workflow must have cron)
   workflow_dispatch:
     inputs:
       total:
