@@ -1,15 +1,14 @@
 name: harvest-naikaku
 on:
   schedule:
-    - cron: '0 */6 * * *'    # med_todo (医书)
-    - cron: '30 */6 * * *'   # shibu (子部·错峰30分·concurrency串行避免16分片顶封)
+    - cron: '0 */6 * * *'   # med_todo (医书·R2允许·子部古籍不走云端见钦定)
   workflow_dispatch:
     inputs:
       total:
         description: "DEPRECATED·实际固定8(留兼容)"
         default: "8"
       list_key:
-        description: worklist key in R2 (med_todo/shibu/full)
+        description: worklist key in R2 (med_todo·⚠️子部古籍绝不进R2·别传shibu)
         default: "_worklist/med_todo.csv"
       edge_proxy:
         description: egress proxy (502 换IP用)
@@ -51,7 +50,7 @@ jobs:
           CF_D1_DB: ${{ secrets.CF_D1_DB }}
           CF_D1_TOKEN: ${{ secrets.CF_D1_TOKEN }}
           LIST_BUCKET: ${{ secrets.LIST_BUCKET }}
-          LIST_KEY: ${{ github.event.inputs.list_key || (github.event.schedule == '30 */6 * * *' && '_worklist/shibu.csv' || '_worklist/med_todo.csv') }}
+          LIST_KEY: ${{ github.event.inputs.list_key || '_worklist/med_todo.csv' }}
           DST_BUCKET: guyaofang-lib
           DST_GUJI_BUCKET: naikaku-dl
           PAGE_WORKERS: "10"
