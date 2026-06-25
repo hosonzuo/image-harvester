@@ -1,12 +1,12 @@
 name: harvest-naikaku
 on:
   schedule:
-    - cron: '0 */6 * * *'   # auto-feed every 6h (fix stall; execution-watchdog: live workflow must have cron)
+    - cron: '0 */6 * * *'   # auto-feed every 6h (execution-watchdog: live workflow must have cron)
   workflow_dispatch:
     inputs:
       total:
-        description: number of shards
-        default: "2"
+        description: "DEPRECATED·实际固定8(留兼容)"
+        default: "8"
       list_key:
         description: worklist key in R2 (med_todo/shibu/full)
         default: "_worklist/med_todo.csv"
@@ -16,6 +16,9 @@ on:
       force:
         description: "1=缺页整本重下覆盖(补残·跳过skip)"
         default: ""
+concurrency:
+  group: harvest-naikaku
+  cancel-in-progress: false
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -38,7 +41,7 @@ jobs:
       - name: run shard
         env:
           P: ${{ secrets.P }}
-          EDGE_PROXY: ${{ github.event.inputs.edge_proxy }}
+          EDGE_PROXY: ${{ github.event.inputs.edge_proxy || 'https://naikaku-dl.hosonzuo.workers.dev/fetch?url=' }}
           NAIKAKU_ZIP: https://naikaku-zip.hosonzuo.workers.dev,https://naikaku-mine.hosonzuo.workers.dev,https://naikaku-zip-2.hosonzuo.workers.dev,https://naikaku-zip-3.hosonzuo.workers.dev,https://naikaku-zip-4.hosonzuo.workers.dev,https://naikaku-zip-5.hosonzuo.workers.dev,https://naikaku-zip-6.hosonzuo.workers.dev,https://naikaku-zip-7.hosonzuo.workers.dev
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_KEY: ${{ secrets.R2_KEY }}
@@ -47,9 +50,9 @@ jobs:
           CF_D1_DB: ${{ secrets.CF_D1_DB }}
           CF_D1_TOKEN: ${{ secrets.CF_D1_TOKEN }}
           LIST_BUCKET: ${{ secrets.LIST_BUCKET }}
-          LIST_KEY: ${{ github.event.inputs.list_key }}
+          LIST_KEY: ${{ github.event.inputs.list_key || '_worklist/med_todo.csv' }}
           DST_BUCKET: guyaofang-lib
           DST_GUJI_BUCKET: naikaku-dl
           PAGE_WORKERS: "10"
           FORCE: ${{ github.event.inputs.force }}
-        run: python stub.py --source naikaku --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total }}
+        run: python stub.py --source naikaku --shard ${{ matrix.shard }} --total 8
