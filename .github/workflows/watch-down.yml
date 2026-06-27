@@ -1,0 +1,40 @@
+name: watch-down
+on:
+  schedule:
+    - cron: '23 */2 * * *'   # 每2小时巡一次
+  workflow_dispatch:
+permissions:
+  actions: read
+  issues: write
+concurrency:
+  group: watch-down
+  cancel-in-progress: false
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check harvest-naikaku health
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          j=$(gh run list -R "$REPO" --workflow=harvest-naikaku.yml -L 8 --json status,conclusion,createdAt)
+          concl=$(echo "$j" | jq -r 'map(select(.status=="completed"))[0].conclusion // "none"')
+          created=$(echo "$j" | jq -r '.[0].createdAt // empty')
+          hrs=99
+          if [ -n "$created" ]; then hrs=$(( ( $(date -u +%s) - $(date -u -d "$created" +%s) ) / 3600 )); fi
+          echo "最近完成run结论=$concl · 最新run距今 ${hrs}h"
+          alert=""
+          [ "$concl" = "failure" ] && alert="最近完成run=失败"
+          [ "$hrs" -ge 8 ] && alert="$alert 已${hrs}h无新run(cron可能停)"
+          title="🛡️ 内閣下载线巡查异常"
+          if [ -n "$alert" ]; then
+            body=$(printf '@hosonzuo8848 %s UTC\n⚠️ 内閣下载线异常: %s\n最近8次run:\n%s' "$(date -u +%FT%TZ)" "$alert" "$(echo "$j" | jq -r '.[]|"  \(.createdAt) \(.status)/\(.conclusion)"' | head -8)")
+            n=$(gh issue list -R "$REPO" -S "$title in:title" -L 1 --json number -q '.[0].number // empty')
+            if [ -n "$n" ]; then gh issue comment "$n" -R "$REPO" -b "$body"; gh issue reopen "$n" -R "$REPO" 2>/dev/null || true;
+            else gh issue create -R "$REPO" -t "$title" -b "$body"; fi
+            echo "已报警 → Issue"
+          else
+            echo "✅ 正常,无需报警"
+          fi
