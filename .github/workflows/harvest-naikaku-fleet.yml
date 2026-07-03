@@ -28,7 +28,7 @@ jobs:
         run: pip install -q requests pillow img2pdf
       - name: harvest shard
         timeout-minutes: 330
-        run: python harvest_artifact.py --worklist worklist_naikaku.csv --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total || '20' }} --out out
+        run: python harvest_naikaku_zip.py --worklist worklist_naikaku.csv --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total || '20' }} --out out
       - name: upload
         if: always()
         uses: actions/upload-artifact@v4
