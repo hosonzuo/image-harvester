@@ -1,0 +1,44 @@
+name: harvest-wellcome-fleet
+# 惠康医学史图书馆(Wellcome Collection)抓取舰队
+# 铁律: 官方 robots.txt Crawl-delay:30(1请求/30秒) —— 只用 2-4 shard,绝不 20 shard 猛冲。
+#       harvest_wellcome.py 内每取一图 sleep(30/total 秒),shard 数越多单 shard 越慢、合计≈站方节奏。
+#       独立脚本 harvest_wellcome.py,不碰 harvest_artifact.py(内阁/NDL 主力)。
+on:
+  workflow_dispatch:
+    inputs:
+      total:
+        description: number of shards (2-4 only, 惠康 Crawl-delay:30 限速, 别加大)
+        default: "4"
+      worklist:
+        description: worklist csv filename
+        default: "worklist_wellcome.csv"
+concurrency:
+  group: wellcome-fleet
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: deps
+        run: pip install -q requests pillow img2pdf
+      - name: harvest shard
+        timeout-minutes: 330
+        run: python harvest_wellcome.py --worklist ${{ github.event.inputs.worklist || 'worklist_wellcome.csv' }} --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total || '4' }} --out out
+      - name: upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wellcome-shard-${{ matrix.shard }}
+          path: out/
+          retention-days: 7
+          if-no-files-found: ignore
