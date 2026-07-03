@@ -1,0 +1,39 @@
+name: harvest-naikaku-fleet
+on:
+  workflow_dispatch:
+    inputs:
+      total:
+        description: number of shards
+        default: "20"
+  schedule:
+    - cron: "0 */6 * * *"   # 每6h自动续跑一轮(持续抓不停),if:always保底,ledger去重续
+concurrency:
+  group: naikaku-fleet
+  cancel-in-progress: false   # 上一轮没跑完不取消,排队等,绝不重叠停摆
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: deps
+        run: pip install -q requests pillow img2pdf
+      - name: harvest shard
+        timeout-minutes: 330
+        run: python harvest_artifact.py --worklist worklist_naikaku.csv --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total || '20' }} --out out
+      - name: upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: naikaku-shard-${{ matrix.shard }}
+          path: out/
+          retention-days: 7
+          if-no-files-found: ignore
