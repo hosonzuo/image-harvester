@@ -6,9 +6,6 @@ name: harvest-wellcome-fleet
 on:
   workflow_dispatch:
     inputs:
-      total:
-        description: number of shards (2-4 only, 惠康 Crawl-delay:30 限速, 别加大)
-        default: "4"
       worklist:
         description: worklist csv filename
         default: "worklist_wellcome.csv"
@@ -24,6 +21,9 @@ jobs:
       max-parallel: 4
       matrix:
         shard: [0, 1, 2, 3]
+        # ⚠️ total 固定=matrix长度(4)、不做 workflow_dispatch 可调输入 —— GH Actions matrix
+        # 在 dispatch 时是静态的,若 total 输入与 matrix 长度不一致会导致分片重复/漏分。
+        # 惠康 robots.txt Crawl-delay:30 官方限速,4 shard 已是这条线的上限,别加大。
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -33,7 +33,7 @@ jobs:
         run: pip install -q requests pillow img2pdf
       - name: harvest shard
         timeout-minutes: 330
-        run: python harvest_wellcome.py --worklist ${{ github.event.inputs.worklist || 'worklist_wellcome.csv' }} --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total || '4' }} --out out
+        run: python harvest_wellcome.py --worklist ${{ github.event.inputs.worklist || 'worklist_wellcome.csv' }} --shard ${{ matrix.shard }} --total 4 --out out
       - name: upload
         if: always()
         uses: actions/upload-artifact@v4
