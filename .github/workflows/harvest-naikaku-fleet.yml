@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: deps
-        run: pip install -q requests pillow img2pdf
+        run: pip install -q curl_cffi pillow img2pdf
       - name: harvest shard
         timeout-minutes: 330
         run: python harvest_artifact.py --worklist worklist_naikaku.csv --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total || '20' }} --out out

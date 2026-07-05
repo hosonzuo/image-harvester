@@ -1,19 +1,30 @@
 #!/usr/bin/env python3
 # GitHub Actions runner(海外IP)直连官网抓 → webp+PDF → out/(供upload-artifact) → 本地拉→123
 # 不存R2。源: NDL IIIF(runner海外直连,不封)。验证版
-import os, sys, io, json, argparse, time, requests
+import os, sys, io, json, argparse, time
+from curl_cffi import requests  # 2026-07-06: 内閣WAF按requests库TLS指纹拦截(curl/浏览器能通)，用curl_cffi伪装Chrome指纹
 from PIL import Image
 import img2pdf
 
-UA = {"User-Agent": "Mozilla/5.0 (compatible; GujiArchive/1.0)"}
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 def fetch(s, url, timeout=120, tries=3):
     for a in range(tries):
         try:
-            r = s.get(url, headers=UA, timeout=timeout)
+            r = s.get(url, headers=UA, timeout=timeout, impersonate="chrome124")
             if r.status_code == 200: return r.content
         except Exception: pass
         time.sleep(2 * (a + 1))
     return None
+
+def max_res_url(resource):
+    """从IIIF resource构造最大分辨率图片URL：优先用service(IIIF Image API)显式拼/full/max/0/default.jpg，
+    没有service才退回resource.@id原值(2026-07-06修:之前直接用@id可能拿到manifest内嵌的非最大分辨率默认图)"""
+    svc = resource.get("service") or {}
+    if isinstance(svc, list): svc = svc[0] if svc else {}
+    base = svc.get("@id") or svc.get("id")
+    if base:
+        return f"{base.rstrip('/')}/full/max/0/default.jpg"
+    return resource.get("@id", "")
 
 def one(s, iid, out, manifest_url=None):
     mu = manifest_url or f"https://dl.ndl.go.jp/api/iiif/{iid}/manifest.json"
@@ -24,7 +35,8 @@ def one(s, iid, out, manifest_url=None):
     title = m.get("label", iid)
     imgs = []
     for c in cvs:
-        iu = c.get("images", [{}])[0].get("resource", {}).get("@id", "")
+        res = c.get("images", [{}])[0].get("resource", {})
+        iu = max_res_url(res)
         if not iu: continue
         b = fetch(s, iu)
         if b and len(b) > 2048: imgs.append(b)
