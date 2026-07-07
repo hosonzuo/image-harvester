@@ -1,0 +1,50 @@
+name: harvest-naikaku-b-fleet
+on:
+  workflow_dispatch:
+    inputs:
+      worklist_url:
+        description: "worklist csv URL (私有云·gist raw / R2 signed / private repo raw)"
+        required: true
+      total:
+        description: total shard count (multi-account fleet uses same total)
+        default: "60"
+      shard_start:
+        description: shard offset (号 1=0, 号 2=20, 号 3=40 for 60-shard fleet)
+        default: "0"
+      max_parallel:
+        description: max_parallel runners per account
+        default: "20"
+concurrency:
+  group: naikaku-b-fleet
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: deps
+        run: pip install -q requests pillow img2pdf
+      - name: fetch worklist from private url
+        run: |
+          curl -fsSL "${{ github.event.inputs.worklist_url }}" -o worklist.csv
+          wc -l worklist.csv
+      - name: harvest shard (B version · 4-tile · 4000w · JPEG q80)
+        timeout-minutes: 330
+        run: python harvest_artifact_b.py --worklist worklist.csv --shard ${{ matrix.shard }} --total ${{ github.event.inputs.total || '60' }} --shard-start ${{ github.event.inputs.shard_start || '0' }} --out out
+      - name: upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: naikaku-b-shard-${{ github.event.inputs.shard_start || '0' }}-${{ matrix.shard }}
+          path: out/
+          retention-days: 7
+          if-no-files-found: ignore
